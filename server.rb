@@ -13,7 +13,7 @@ class GameServer
     run_server
   end
 
-
+  # Operate Server
   def run_server
     loop {
       client = @server_socket.accept
@@ -37,7 +37,7 @@ class GameServer
             client.puts "Closing connection"
             client.kill self
           else
-            @players[uname.to_sym] = []
+            @players[uname.to_sym] = [ {:client => client }]
           end
         end
 
@@ -49,13 +49,45 @@ class GameServer
         # client.close
         
         if @players.keys.count == 2
-          client.puts "Lets Begin"
+          client.puts ""
+          client.puts "Lets Begin!"
+          client.puts ""
+
         end
+        
+      assign_roles()
+
       end
     }.join
   end
 
+  # Randomly assign roles to users
+  def assign_roles
+    # Assigned by order of login
+    first_to_login = @player.keys[0]
+    second_to_login = @player.keys[1]
 
+    first_number = rand()
+    second_number = rand()
+
+    # if  first to login greater; assigned Dealer, if less or equal first to login is assigned Spotter
+    if first_number > second_number 
+      @players[first_to_login] << { :role => "Dealer" }
+      @players[second_to_login] << { :role => "Spotter" }
+    else
+      @players[first_to_login] << { :role => "Spotter" }
+      @players[second_to_login] << { :role => "Dealer" }
+    end
+  end
+
+  # Get TCP Connection of players
+  def get_client_connection(key)
+    @players[key][0][:client]
+  end
+
+  def stream
+
+  end
 end
 
 authorized_clients =  [ {"dannyboi" => "dre@margh_shelled"}, {"matty7" => "win&win99" }] 
