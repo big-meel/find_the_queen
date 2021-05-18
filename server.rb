@@ -98,16 +98,20 @@ class GameServer
 
   def stream(username, connection)
     while round < 5 do
-      # if round == 0
-      #   @players.keys.each do |user|
-      #     get_client_connection(user).puts " You are #{get_role(user)}"
-      #   end
-      # end
-      
+      @players.keys.each do |user|
+        get_client_connection(user).puts (get_role(user) == "Dealer" ? 
+        "Hide The Queen! Select a number between 0 and 4: " :
+        "Spot the Queen! Select a number between 0 and 4: "
+      )
+      end
+
       message = connection.gets.chomp
+
       @players.keys.each do |user|
         get_client_connection(user).puts "#{username} says #{message} Round: #{round}"
       end
+
+      round += 1
     end
   end
 
