@@ -2,6 +2,7 @@
 require 'socket'
 
 # TODO: Closes server when both users have logged out
+# TODO
 
 class GameServer
   attr_accessor :round
@@ -10,6 +11,8 @@ class GameServer
 
     @authorized_clients = authorized_clients
     @round = 0
+    
+    @options = Hash.new
 
     @players = Hash.new
 
@@ -47,7 +50,6 @@ class GameServer
         
         client.puts "#{client} is Connected"
         client.puts "Checking for other player"
-        # client.close
         
         if @players.keys.count == 2
           client.puts ""
@@ -62,10 +64,9 @@ class GameServer
           end
           
           stream( uname, client )
+
+          client.close
         end
-        
-
-
       end
     }.join
   end
@@ -84,9 +85,12 @@ class GameServer
       @players[first_to_login] << { :role => "Spotter" }
       @players[second_to_login] << { :role => "Dealer" }
     end
+
+    @players[first_to_login] << { :wins => 0}
+    @players[second_to_login] << { :wins => 0}
   end
 
-  # Get TCP Connection of players
+  # Get TCP Object of players
   def get_client_connection(key)
     @players[key][0][:client]
   end
@@ -96,6 +100,11 @@ class GameServer
     @players[username.to_sym][1][:role]
   end
 
+  def check_winner(username, connection, message)
+
+  end
+
+
   def stream(username, connection)
     while round < 5 do
       @players.keys.each do |user|
@@ -104,11 +113,21 @@ class GameServer
         "Spot the Queen! Select a number between 0 and 4: "
       )
       end
-
+      
       message = connection.gets.chomp
 
+      until (1..3).include? message.to_i do
+        message = connection.gets.chomp
+      end
+
       @players.keys.each do |user|
-        get_client_connection(user).puts "#{username} says #{message} Round: #{round}"
+        get_client_connection(user).puts "Waiting for opponent..."
+      end
+
+      if @options.count == 2
+        @players.keys.each do |user|
+          get_client_connection(user).puts "Results"
+        end
       end
 
       round += 1
