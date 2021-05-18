@@ -1,11 +1,15 @@
 # Adds socket library
 require 'socket'
 
+# TODO: Closes server when both users have logged out
+
 class GameServer
+  attr_accessor :round
   def initialize(addr, port, authorized_clients)
     @server_socket = TCPServer.open(addr, port)
 
     @authorized_clients = authorized_clients
+    @round = 0
 
     @players = Hash.new
 
@@ -40,12 +44,9 @@ class GameServer
             @players[uname.to_sym] = [ {:client => client }]
           end
         end
-
-        
-        
         
         client.puts "#{client} is Connected"
-        client.puts "#{@players.keys.count} players "
+        client.puts "Checking for other player"
         # client.close
         
         if @players.keys.count == 2
@@ -53,23 +54,28 @@ class GameServer
           client.puts "Lets Begin!"
           client.puts ""
 
+          # Create roles for each user
+          assign_roles()
+
+          @players.keys.each do |user|
+            get_client_connection(user).puts " < ---- You are #{get_role(user)}"
+          end
+          
+          stream( uname, client )
         end
         
-      assign_roles()
+
 
       end
     }.join
   end
 
-  # Randomly assign roles to users
   def assign_roles
-    # Assigned by order of login
-    first_to_login = @player.keys[0]
-    second_to_login = @player.keys[1]
+    first_to_login = @players.keys[0].to_sym
+    second_to_login = @players.keys[1].to_sym
 
     first_number = rand()
     second_number = rand()
-
     # if  first to login greater; assigned Dealer, if less or equal first to login is assigned Spotter
     if first_number > second_number 
       @players[first_to_login] << { :role => "Dealer" }
@@ -85,9 +91,26 @@ class GameServer
     @players[key][0][:client]
   end
 
-  def stream
-
+  # Get Role
+  def get_role(username)
+    @players[username.to_sym][1][:role]
   end
+
+  def stream(username, connection)
+    while round < 5 do
+      # if round == 0
+      #   @players.keys.each do |user|
+      #     get_client_connection(user).puts " You are #{get_role(user)}"
+      #   end
+      # end
+      
+      message = connection.gets.chomp
+      @players.keys.each do |user|
+        get_client_connection(user).puts "#{username} says #{message} Round: #{round}"
+      end
+    end
+  end
+
 end
 
 authorized_clients =  [ {"dannyboi" => "dre@margh_shelled"}, {"matty7" => "win&win99" }] 
