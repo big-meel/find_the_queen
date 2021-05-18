@@ -130,6 +130,9 @@ class GameServer
         end
       end
 
+      # TODO: Add winning conditions for each round
+      # TODO: Add message for winner at end of 5 rounds
+
       round += 1
     end
   end
